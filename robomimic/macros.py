@@ -17,7 +17,7 @@ WANDB_API_KEY = None
 
 try:
     from robomimic.macros_private import *
-except ImportError:
+except:
     from robomimic.utils.log_utils import log_warning
     import robomimic
     log_warning(

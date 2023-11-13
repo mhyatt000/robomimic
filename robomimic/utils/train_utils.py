@@ -15,6 +15,7 @@ from copy import deepcopy
 from collections import OrderedDict
 
 import torch
+from torch.utils.data import ConcatDataset
 
 import robomimic
 import robomimic.utils.tensor_utils as TensorUtils
@@ -100,29 +101,40 @@ def load_data_for_training(config, obs_keys):
     if valid_filter_by_attribute is not None:
         assert config.experiment.validate, "specified validation filter key {}, but config.experiment.validate is not set".format(valid_filter_by_attribute)
 
-    # load the dataset into memory
-    if config.experiment.validate:
-        assert not config.train.hdf5_normalize_obs, "no support for observation normalization with validation data yet"
-        assert (train_filter_by_attribute is not None) and (valid_filter_by_attribute is not None), \
-            "did not specify filter keys corresponding to train and valid split in dataset" \
-            " - please fill config.train.hdf5_filter_key and config.train.hdf5_validation_filter_key"
-        train_demo_keys = FileUtils.get_demos_for_filter_key(
-            hdf5_path=os.path.expanduser(config.train.data),
-            filter_key=train_filter_by_attribute,
-        )
-        valid_demo_keys = FileUtils.get_demos_for_filter_key(
-            hdf5_path=os.path.expanduser(config.train.data),
-            filter_key=valid_filter_by_attribute,
-        )
-        assert set(train_demo_keys).isdisjoint(set(valid_demo_keys)), "training demonstrations overlap with " \
-            "validation demonstrations!"
-        train_dataset = dataset_factory(config, obs_keys, filter_by_attribute=train_filter_by_attribute)
-        valid_dataset = dataset_factory(config, obs_keys, filter_by_attribute=valid_filter_by_attribute)
-    else:
-        train_dataset = dataset_factory(config, obs_keys, filter_by_attribute=train_filter_by_attribute)
-        valid_dataset = None
+    def build_from_keys(config, obs_keys, data=config.train.data):
+        """builds dataset(s) from observation keys"""
 
-    return train_dataset, valid_dataset
+        # load the dataset into memory
+        if config.experiment.validate:
+            assert not config.train.hdf5_normalize_obs, "no support for observation normalization with validation data yet"
+            assert (train_filter_by_attribute is not None) and (valid_filter_by_attribute is not None), \
+                "did not specify filter keys corresponding to train and valid split in dataset" \
+                " - please fill config.train.hdf5_filter_key and config.train.hdf5_validation_filter_key"
+            train_demo_keys = FileUtils.get_demos_for_filter_key(
+                hdf5_path=os.path.expanduser(data),
+                filter_key=train_filter_by_attribute,
+            )
+            valid_demo_keys = FileUtils.get_demos_for_filter_key(
+                hdf5_path=os.path.expanduser(data),
+                filter_key=valid_filter_by_attribute,
+            )
+            assert set(train_demo_keys).isdisjoint(set(valid_demo_keys)), "training demonstrations overlap with " \
+                "validation demonstrations!"
+            train_dataset = dataset_factory(config, obs_keys, filter_by_attribute=train_filter_by_attribute, dataset_path=data)
+            valid_dataset = dataset_factory(config, obs_keys, filter_by_attribute=valid_filter_by_attribute, dataset_path=data)
+        else:
+            train_dataset = dataset_factory(config, obs_keys, filter_by_attribute=train_filter_by_attribute, dataset_path=data)
+            valid_dataset = None
+
+        return train_dataset, valid_dataset
+
+    if type(config.train.data) is str:
+        return build_from_keys(config, obs_keys, config.train.data)
+    else:
+        assert type(config.train.data) in (list,tuple), "must be a list or tuple for ConcatDataset"
+        train, valid = zip(*[build_from_keys(config,obs_keys, d) for d in config.train.data])
+        print(train,valid)
+        return ConcatDataset(train),( ConcatDataset(valid) if any(valid) else None)
 
 
 def dataset_factory(config, obs_keys, filter_by_attribute=None, dataset_path=None):

@@ -68,22 +68,23 @@ def train(config, device):
     ObsUtils.initialize_obs_utils_with_config(config)
 
     # make sure the dataset exists
-    dataset_path = os.path.expanduser(config.train.data)
-    if not os.path.exists(dataset_path):
-        raise Exception("Dataset at provided path {} not found!".format(dataset_path))
+    dataset_paths= [os.path.expanduser(d) for d in config.train.data]
+    for d in dataset_paths:
+        if not os.path.exists(d):
+            raise Exception(f"Dataset at provided path {d} not found!")
 
     # load basic metadata from training file
     print("\n============= Loaded Environment Metadata =============")
-    env_meta = FileUtils.get_env_metadata_from_dataset(dataset_path=config.train.data)
+    env_meta = FileUtils.get_env_metadata_from_dataset(dataset_path=config.train.data[0])
     shape_meta = FileUtils.get_shape_metadata_from_dataset(
-        dataset_path=config.train.data,
+        dataset_path=config.train.data[0],
         all_obs_keys=config.all_obs_keys,
         verbose=True
     )
 
     if config.experiment.env is not None:
         env_meta["env_name"] = config.experiment.env
-        print("=" * 30 + "\n" + "Replacing Env to {}\n".format(env_meta["env_name"]) + "=" * 30)
+        print("=" * 30 + "\n" + f"Replacing Env to {env_meta['env_name']}\n" + "=" * 30)
 
     # create environment
     envs = OrderedDict()
@@ -124,7 +125,7 @@ def train(config, device):
         ac_dim=shape_meta["ac_dim"],
         device=device,
     )
-    
+
     # save the config as a json file
     with open(os.path.join(log_dir, '..', 'config.json'), 'w') as outfile:
         json.dump(config, outfile, indent=4)
@@ -136,7 +137,8 @@ def train(config, device):
     # load training data
     trainset, validset = TrainUtils.load_data_for_training(
         config, obs_keys=shape_meta["all_obs_keys"])
-    train_sampler = trainset.get_dataset_sampler()
+    # ConcatDataset has no builtin sampler
+    train_sampler = trainset.get_dataset_sampler() if 'get_dataset_sampler' in trainset.__dict__ else None
     print("\n============= Training Dataset =============")
     print(trainset)
     print("")

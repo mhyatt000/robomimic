@@ -4,6 +4,8 @@
 # to our processed low-dim and image hdf5 files.
 
 BASE_DATASET_DIR="../../datasets"
+BASE_DATASET_DIR="/grand/EVITA/datasets/robomimic"
+BASE_DATASET_DIR="/Users/matthewhyatt/cs/.datasets/robomimic"
 echo "Using base dataset directory: $BASE_DATASET_DIR"
 
 
@@ -12,7 +14,7 @@ echo "Using base dataset directory: $BASE_DATASET_DIR"
 
 ### mg ###
 
-
+mg="
 # lift - mg, sparse
 python dataset_states_to_obs.py --done_mode 0 \
 --dataset $BASE_DATASET_DIR/lift/mg/demo_v141.hdf5 \
@@ -44,14 +46,14 @@ python dataset_states_to_obs.py --done_mode 0 --shaped \
 python dataset_states_to_obs.py --done_mode 0 --shaped \
 --dataset $BASE_DATASET_DIR/can/mg/demo_v141.hdf5 \
 --output_name image_dense_v141.hdf5 --camera_names agentview robot0_eye_in_hand --camera_height 84 --camera_width 84
-
+"
 
 ### NOTE: we use done-mode 2 for PH / MH (dones on task success and end of trajectory) ###
 
 
 ### ph ###
 
-
+"
 # lift - ph
 python dataset_states_to_obs.py --done_mode 2 \
 --dataset $BASE_DATASET_DIR/lift/ph/demo_v141.hdf5 \
@@ -67,6 +69,7 @@ python dataset_states_to_obs.py --done_mode 2 \
 python dataset_states_to_obs.py --done_mode 2 \
 --dataset $BASE_DATASET_DIR/can/ph/demo_v141.hdf5 \
 --output_name image_v141.hdf5 --camera_names agentview robot0_eye_in_hand --camera_height 84 --camera_width 84
+"
 
 # square - ph
 python dataset_states_to_obs.py --done_mode 2 \
@@ -95,7 +98,7 @@ python dataset_states_to_obs.py --done_mode 2 \
 
 ### mh ###
 
-
+mh="
 # lift - mh
 python dataset_states_to_obs.py --done_mode 2 \
 --dataset $BASE_DATASET_DIR/lift/mh/demo_v141.hdf5 \
@@ -127,7 +130,7 @@ python dataset_states_to_obs.py --done_mode 2 \
 python dataset_states_to_obs.py --done_mode 2 \
 --dataset $BASE_DATASET_DIR/transport/mh/demo_v141.hdf5 \
 --output_name image_v141.hdf5 --camera_names shouldercamera0 shouldercamera1 robot0_eye_in_hand robot1_eye_in_hand --camera_height 84 --camera_width 84
-
+"
 
 ### can-paired ###
 

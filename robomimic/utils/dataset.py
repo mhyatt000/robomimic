@@ -606,4 +606,5 @@ class SequenceDataset(torch.utils.data.Dataset):
         See the `train` function in scripts/train.py, and torch
         `DataLoader` documentation, for more info.
         """
+
         return None
