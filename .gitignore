@@ -1,3 +1,6 @@
+# others
+*.json
+
 # pip distribution folder
 dist/
 
