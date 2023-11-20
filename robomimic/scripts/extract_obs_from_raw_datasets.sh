@@ -5,7 +5,7 @@
 
 BASE_DATASET_DIR="../../datasets"
 BASE_DATASET_DIR="/grand/EVITA/datasets/robomimic"
-BASE_DATASET_DIR="/Users/matthewhyatt/cs/.datasets/robomimic"
+BASE_DATASET_DIR="/Users/user/cs/.datasets/robomimic"
 echo "Using base dataset directory: $BASE_DATASET_DIR"
 
 

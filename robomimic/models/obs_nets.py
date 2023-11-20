@@ -1028,7 +1028,6 @@ class MIMO_Transformer(Module):
         Returns:
             embeddings (torch.Tensor): input embeddings to pass to transformer backbone.
         """
-        print(inputs.shape)
         embeddings = self.nets["embed_encoder"](inputs)
         time_embeddings = self.embed_timesteps(embeddings)
         embeddings = embeddings + time_embeddings

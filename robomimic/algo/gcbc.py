@@ -7,28 +7,26 @@ see RT2, RoboCat, STEVE-1
 from collections import OrderedDict
 
 import torch
+import torch.distributions as D
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.distributions as D
 
 import robomimic.models.base_nets as BaseNets
 import robomimic.models.obs_nets as ObsNets
 import robomimic.models.policy_nets as PolicyNets
 import robomimic.models.vae_nets as VAENets
 import robomimic.utils.loss_utils as LossUtils
+import robomimic.utils.obs_utils as ObsUtils
 import robomimic.utils.tensor_utils as TensorUtils
 import robomimic.utils.torch_utils as TorchUtils
-import robomimic.utils.obs_utils as ObsUtils
-
+from robomimic.algo import PolicyAlgo, register_algo_factory_func
 from robomimic.algo.bc import BC, BC_Transformer
-
-from robomimic.algo import register_algo_factory_func, PolicyAlgo
 
 
 @register_algo_factory_func("gcbc")
 def algo_config_to_class(algo_config):
     """
-    Maps algo config to the GCBC algo class to instantiate, 
+    Maps algo config to the GCBC algo class to instantiate,
     along with additional algo kwargs.
 
     Args:
@@ -62,7 +60,7 @@ def algo_config_to_class(algo_config):
 
 
 class GCBC(BC):
-    """ Normal GCBC training.  
+    """Normal GCBC training.
 
     inherited from BC:
         _create_networks
@@ -83,6 +81,7 @@ class GCBC(BC):
                 will be used for training
         """
         assert "goal_obs" in batch
+        print(batch['obs']['agentview_image'].shape)
         input_batch = dict()
         input_batch["obs"] = {k: batch["obs"][k][:, 0, :] for k in batch["obs"]}
         input_batch["goal_obs"] = batch["goal_obs"]
@@ -105,7 +104,9 @@ class GCBC(BC):
             predictions (dict): dictionary containing network outputs
         """
         predictions = OrderedDict()
-        actions = self.nets["policy"](obs_dict=batch["obs"], goal_dict=batch["goal_obs"])
+        actions = self.nets["policy"](
+            obs_dict=batch["obs"], goal_dict=batch["goal_obs"]
+        )
         # TODO implement next_obs prediction
         # next_obs = ...
         predictions["actions"] = actions
@@ -141,7 +142,7 @@ class GCBC(BC):
         losses["action_loss"] = action_loss
 
         # TODO
-        # you have to do this with a frozen VQ encoder otherwise it will 
+        # you have to do this with a frozen VQ encoder otherwise it will
         # mess up the visual representation... :(
         # make sure to do 4-5 steps into the future like robocat
         # visual_loss = nn.MSELoss()(predictions['next_obs'],batch['next_obs'])
@@ -202,15 +203,14 @@ class GCBC(BC):
         Returns:
             action (torch.Tensor): action tensor
         """
-        return super(GCBC,self).get_action(obs_dict, goal_dict)
-
+        return super(GCBC, self).get_action(obs_dict, goal_dict)
 
 
 class GCBC_Transformer(GCBC, BC_Transformer):
-    """ GCBC training with a Transformer policy.  """
+    """GCBC training with a Transformer policy."""
 
     def _create_networks(self):
-        """ Creates networks and places them into @self.nets.  """
+        """Creates networks and places them into @self.nets."""
         BC_Transformer._create_networks(self)
 
     def _set_params_from_config(self):
@@ -232,7 +232,7 @@ class GCBC_Transformer(GCBC, BC_Transformer):
                 will be used for training
         """
         # always supervise all steps
-        return super(GCBC_Transformer,self).process_batch_for_training(batch)
+        return super(GCBC_Transformer, self).process_batch_for_training(batch)
 
     def _forward_training(self, batch, epoch=None):
         """
@@ -251,9 +251,9 @@ class GCBC_Transformer(GCBC, BC_Transformer):
             batch["obs"],
             size=(self.context_length),
             dim=1,
-            msg=f"Error: expect temporal dimension of obs batch to match transformer context length {self.context_length}"
+            msg=f"Error: expect temporal dimension of obs batch to match transformer context length {self.context_length}",
         )
-        return super(GCBC_Transformer,self)._forward_training(batch, epoch=None)
+        return super(GCBC_Transformer, self)._forward_training(batch, epoch=None)
 
     def get_action(self, obs_dict, goal_dict):
         """
@@ -271,8 +271,8 @@ class GCBC_Transformer(GCBC, BC_Transformer):
         BC_Transformer.reset(self)
 
 
-class BC_Transformer_GMM(BC_Transformer):
-    """ BC training with a Transformer GMM policy.  """
+class GCBC_Transformer_GMM(BC_Transformer):
+    """BC training with a Transformer GMM policy."""
 
     def _create_networks(self):
         """
@@ -290,14 +290,16 @@ class BC_Transformer_GMM(BC_Transformer):
             min_std=self.algo_config.gmm.min_std,
             std_activation=self.algo_config.gmm.std_activation,
             low_noise_eval=self.algo_config.gmm.low_noise_eval,
-            encoder_kwargs=ObsUtils.obs_encoder_kwargs_from_config(self.obs_config.encoder),
+            encoder_kwargs=ObsUtils.obs_encoder_kwargs_from_config(
+                self.obs_config.encoder
+            ),
             **BaseNets.transformer_args_from_config(self.algo_config.transformer),
         )
         self._set_params_from_config()
         self.nets = self.nets.float().to(self.device)
 
     def _forward_training(self, batch, epoch=None):
-        """ Modify from super class to support GMM training.  """
+        """Modify from super class to support GMM training."""
         # ensure that transformer context length is consistent with temporal dimension of observations
         TensorUtils.assert_size_at_dim(
             batch["obs"],
@@ -327,7 +329,9 @@ class BC_Transformer_GMM(BC_Transformer):
                 scale=dists.component_distribution.base_dist.scale[:, -1],
             )
             component_distribution = D.Independent(component_distribution, 1)
-            mixture_distribution = D.Categorical(logits=dists.mixture_distribution.logits[:, -1])
+            mixture_distribution = D.Categorical(
+                logits=dists.mixture_distribution.logits[:, -1]
+            )
             dists = D.MixtureSameFamily(
                 mixture_distribution=mixture_distribution,
                 component_distribution=component_distribution,

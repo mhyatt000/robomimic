@@ -41,13 +41,13 @@
         "num_data_workers": 2,
         "hdf5_cache_mode": "all",
         "hdf5_use_swmr": true,
-        "hdf5_load_next_obs": false,
+        "hdf5_load_next_obs": true,
         "hdf5_normalize_obs": false,
         "hdf5_filter_key": null,
         "hdf5_validation_filter_key": null,
-        "seq_length": 1,
+        "seq_length": 10,
         "pad_seq_length": true,
-        "frame_stack": 1,
+        "frame_stack": 10,
         "pad_frame_stack": true,
         "dataset_keys": [
             "actions",
@@ -193,7 +193,9 @@
             },
             "rgb": {
                 "core_class": "VisualCore",
-                "core_kwargs": {},
+                "core_kwargs": {
+                    "backbone_class": "R3MConv"
+                },
                 "obs_randomizer_class": null,
                 "obs_randomizer_kwargs": {}
             },

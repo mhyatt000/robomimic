@@ -8,7 +8,7 @@ read: RT2, RoboCat
 from robomimic.config.base_config import BaseConfig
 from robomimic.config.bc_config import BCConfig
 
-class GCBCConfig(BCConfig):
+class GCBCConfig(BCConfig, BaseConfig):
     """
     Goal Conditioned Behavior Cloning
     given a goal image, predict actions over time
@@ -38,15 +38,15 @@ class GCBCConfig(BCConfig):
 
         self.train.seq_length = 10
         self.train.pad_seq_length = True
-        self.train.frame_stack = 1
+        self.train.frame_stack = 10
         self.train.pad_frame_stack = True
 
 
     def algo_config(self):
         """
-        populates the `config.algo` attribute of the config, and is given to the 
-        `Algo` subclass (see `algo/algo.py`) for each algorithm through the `algo_config` 
-        argument to the constructor. Any parameter that an algorithm needs to determine its 
+        populates the `config.algo` attribute of the config, and is given to the
+        `Algo` subclass (see `algo/algo.py`) for each algorithm through the `algo_config`
+        argument to the constructor. Any parameter that an algorithm needs to determine its
         training and test-time behavior should be populated here.
         """
         super(GCBCConfig, self).algo_config()
@@ -66,7 +66,7 @@ class GCBCConfig(BCConfig):
         self.algo.vae.prior.is_conditioned = False                          # whether to condition prior on observations
         self.algo.vae.prior.use_gmm = False                                 # whether to use GMM prior
         self.algo.vae.prior.gmm_num_modes = 10                              # number of GMM modes
-        self.algo.vae.prior.gmm_learn_weights = False                       # whether to learn GMM weights 
+        self.algo.vae.prior.gmm_learn_weights = False                       # whether to learn GMM weights
         self.algo.vae.prior.use_categorical = False                         # whether to use categorical prior
         self.algo.vae.prior.categorical_dim = 10                            # the number of categorical classes for each latent dimension
         self.algo.vae.prior.categorical_gumbel_softmax_hard = False         # use hard selection in forward pass
@@ -105,12 +105,12 @@ class GCBCConfig(BCConfig):
         self.observation.modalities.obs.rgb = [
             "sideview_image",
             "robot0_eye_in_hand_image"
-        ]  
+        ]
 
         # specify rgb image goal observations to condition agent on
-        self.observation.modalities.goal.rgb = [
-            "sideview_image",
-        ]  
+        self.observation.modalities.goal.rgb = ["sideview_image"]
+
+        self.observation.encoder.rgb.core_kwargs.backbone_class = "R3MConv"
 
 
     def meta_config(self):
@@ -132,14 +132,14 @@ class GCBCConfig(BCConfig):
 
 def algo_config(self):
     """
-    This function populates the `config.algo` attribute of the config, and is given to the 
-    `Algo` subclass (see `algo/algo.py`) for each algorithm through the `algo_config` 
-    argument to the constructor. Any parameter that an algorithm needs to determine its 
+    This function populates the `config.algo` attribute of the config, and is given to the
+    `Algo` subclass (see `algo/algo.py`) for each algorithm through the `algo_config`
+    argument to the constructor. Any parameter that an algorithm needs to determine its
     training and test-time behavior should be populated here.
     """
 
     # subgoal definition: observation that is @subgoal_horizon number of timesteps in future from current observation
-    self.algo.subgoal_horizon = 10 
+    self.algo.subgoal_horizon = 10
 
     # MLP size for deterministic goal network (unused if VAE is enabled)
     self.algo.ae.planner_layer_dims = (300, 400)
@@ -159,7 +159,7 @@ def algo_config(self):
     self.algo.vae.prior.is_conditioned = False                          # whether to condition prior on observations
     self.algo.vae.prior.use_gmm = False                                 # whether to use GMM prior
     self.algo.vae.prior.gmm_num_modes = 10                              # number of GMM modes
-    self.algo.vae.prior.gmm_learn_weights = False                       # whether to learn GMM weights 
+    self.algo.vae.prior.gmm_learn_weights = False                       # whether to learn GMM weights
     self.algo.vae.prior.use_categorical = False                         # whether to use categorical prior
     self.algo.vae.prior.categorical_dim = 10                            # the number of categorical classes for each latent dimension
     self.algo.vae.prior.categorical_gumbel_softmax_hard = False         # use hard selection in forward pass
@@ -170,3 +170,5 @@ def algo_config(self):
     self.algo.vae.encoder_layer_dims = (300, 400)                       # encoder MLP layer dimensions
     self.algo.vae.decoder_layer_dims = (300, 400)                       # decoder MLP layer dimensions
     self.algo.vae.prior_layer_dims = (300, 400)                         # prior MLP layer dimensions (if learning conditioned prior)
+
+

@@ -8,6 +8,7 @@ import json
 import robomimic
 from robomimic.config import get_all_registered_configs
 
+print('main')
 
 def main():
     # store template config jsons in this directory

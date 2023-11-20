@@ -134,6 +134,8 @@ def load_data_for_training(config, obs_keys):
         assert type(config.train.data) in (list,tuple), "must be a list or tuple for ConcatDataset"
         train, valid = zip(*[build_from_keys(config,obs_keys, d) for d in config.train.data])
         print(train,valid)
+        if len(train) == 1:
+            return train[0], valid[0]
         return ConcatDataset(train),( ConcatDataset(valid) if any(valid) else None)
 
 
@@ -568,6 +570,7 @@ def run_epoch(model, data_loader, epoch, validate=False, num_steps=None, obs_nor
 
         # forward and backward pass
         t = time.time()
+        print(input_batch['obs']['agentview_image'].shape)
         info = model.train_on_batch(input_batch, epoch, validate=validate)
         timing_stats["Train_Batch"].append(time.time() - t)
 

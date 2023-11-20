@@ -373,7 +373,6 @@ def main(args):
 
     # lock config to prevent further modifications and ensure missing keys raise errors
     config.lock()
-
     # catch error during training and print it
     res_str = "finished run successfully!"
     try:
