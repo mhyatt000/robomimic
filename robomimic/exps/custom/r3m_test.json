@@ -134,7 +134,7 @@
                 "core_class": "VisualCore",
                 "core_kwargs": {
                     "feature_dimension": 64,
-                    "backbone_class": "ResNet18Conv",
+                    "backbone_class": "R3MConv",
                     "backbone_kwargs": {
                         "pretrained": false,
                         "input_coord_conv": false
