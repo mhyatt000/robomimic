@@ -1060,6 +1060,9 @@ class MIMO_Transformer(Module):
 
         inputs = inputs.copy()
 
+        allshape = lambda x : {k:allshape(v) for k,v in x.items()} if type(x) is dict else x.shape
+        print(allshape(inputs))
+        # quit()
         transformer_encoder_outputs = None
         transformer_inputs = TensorUtils.time_distributed(
             inputs, self.nets["encoder"], inputs_as_kwargs=True

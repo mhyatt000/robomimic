@@ -19,8 +19,10 @@ from torch.utils.data import ConcatDataset
 
 import robomimic
 import robomimic.utils.file_utils as FileUtils
+import robomimic.utils.obs_utils as ObsUtils
 import robomimic.utils.log_utils as LogUtils
 import robomimic.utils.tensor_utils as TensorUtils
+from robomimic.algo.gcbc import GCBC_Transformer
 from robomimic.algo import RolloutPolicy
 from robomimic.envs.env_base import EnvBase
 from robomimic.envs.wrappers import EnvWrapper
@@ -82,6 +84,34 @@ def get_exp_dir(config, auto_remove_exp_dir=False):
     video_dir = os.path.join(base_output_dir, time_str, "videos")
     os.makedirs(video_dir)
     return log_dir, output_dir, video_dir
+
+
+
+class EnhancedConcatDataset(ConcatDataset):
+    def __init__(self, datasets):
+        super().__init__(datasets)
+
+    def prepare(self, data_dict):
+        """
+        Process a dictionary of tensors, converting any tensor 
+        with shape (m, n, 3) to the format (3, m, n).
+        """
+        prep = lambda x : {k:prep(v) for k,v in x.items()} if type(x) is dict else ObsUtils.batch_image_hwc_to_chw(x) if len(x.shape) == 3 else x
+        out = prep(data_dict)
+        allshape = lambda x : {k:allshape(v) for k,v in x.items()} if type(x) is dict else x.shape
+        # print(allshape(out))
+        # quit()
+        return out
+
+    def sample_goal(self):
+        samples = {}
+        for dataset in self.datasets:
+            if hasattr(dataset, 'hdf5_path'):
+                index = torch.randint(len(dataset), (1,)).item()
+                samples[dataset.hdf5_path] = self.prepare(dataset[index]['goal_obs'])
+            else:
+                raise ValueError("Dataset does not have an hdf5_path attribute.")
+        return samples
 
 
 def load_data_for_training(config, obs_keys):
@@ -162,14 +192,14 @@ def load_data_for_training(config, obs_keys):
         assert type(config.train.data) in (
             list,
             tuple,
-        ), "must be a list or tuple for ConcatDataset"
+        ), "must be a list or tuple for EnhancedConcatDataset"
         train, valid = zip(
             *[build_from_keys(config, obs_keys, d) for d in config.train.data]
         )
         print(train, valid)
         if len(train) == 1:
             return train[0], valid[0]
-        return ConcatDataset(train), (ConcatDataset(valid) if any(valid) else None)
+        return EnhancedConcatDataset(train), (EnhancedConcatDataset(valid) if any(valid) else None)
 
 
 def dataset_factory(config, obs_keys, filter_by_attribute=None, dataset_path=None):
@@ -256,9 +286,11 @@ def run_rollout(
 
     ob_dict = env.reset()
     goal_dict = None
-    if use_goals:
+    if use_goals and type(policy.policy) is not GCBC_Transformer:
         # retrieve goal from the environment
         goal_dict = env.get_goal()
+    if type(policy.policy) is GCBC_Transformer:
+        goal_dict = policy.policy.get_cached_goals(env._env_name)
 
     results = {}
     video_count = 0  # video frame counter

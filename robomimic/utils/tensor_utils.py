@@ -140,12 +140,7 @@ def detach(x):
     Returns:
         y (dict or list or tuple): new nested dict-list-tuple
     """
-    return recursive_dict_list_tuple_apply(
-        x,
-        {
-            torch.Tensor: lambda x: x.detach(),
-        }
-    )
+    return map_tensor( x,  lambda x: x.detach())
 
 
 def to_batch(x):

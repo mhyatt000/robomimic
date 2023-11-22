@@ -1,0 +1,26 @@
+ {'obs': {'agentview_image': torch.Size([100, 10, 3, 84, 84]), 'robot0_ee
+f_pos': torch.Size([100, 10, 3]), 'robot0_eef_quat': torch.
+Size([100, 10, 4]), 'robot0_eye_in_hand_image': torch.Size(
+[100, 10, 3, 84, 84]), 'robot0_gripper_qpos': torch.Size([1
+00, 10, 2])}, 'goal': {'agentview_image': torch.Size([100, 
+10, 3, 84, 84]), 'robot0_eef_pos': torch.Size([100, 10, 3])
+, 'robot0_eef_quat': torch.Size([100, 10, 4]), 'robot0_eye_
+in_hand_image': torch.Size([100, 10, 3, 84, 84]), 'robot0_g
+ripper_qpos': torch.Size([100, 10, 2])}}
+
+{'obs': {'agentview_image': torch.Size([1, 10, 3, 84, 84]), 'robot0_eye_in_hand_i
+mage': torch.Size([1, 10, 3, 84, 84]), 'object': torch.Size
+([1, 10, 10]), 'robot0_joint_pos': torch.Size([1, 10, 7]), 
+'robot0_joint_pos_cos': torch.Size([1, 10, 7]), 'robot0_joi
+nt_pos_sin': torch.Size([1, 10, 7]), 'robot0_joint_vel': to
+rch.Size([1, 10, 7]), 'robot0_eef_pos': torch.Size([1, 10, 
+3]), 'robot0_eef_quat': torch.Size([1, 10, 4]), 'robot0_eef
+_vel_lin': torch.Size([1, 10, 3]), 'robot0_eef_vel_ang': to
+rch.Size([1, 10, 3]), 'robot0_gripper_qpos': torch.Size([1,
+ 10, 2]), 'robot0_gripper_qvel': torch.Size([1, 10, 2]), 't
+imesteps': torch.Size([1, 10, 1]), 'actions': torch.Size([1
+, 10, 7])}, 'goal': {'agentview_image': torch.Size([1, 10, 
+84, 84, 3]), 'robot0_eef_pos': torch.Size([1, 10, 3]), 'rob
+ot0_eef_quat': torch.Size([1, 10, 4]), 'robot0_eye_in_hand_
+image': torch.Size([1, 10, 84, 84, 3]), 'robot0_gripper_qpo
+s': torch.Size([1, 10, 2])}}

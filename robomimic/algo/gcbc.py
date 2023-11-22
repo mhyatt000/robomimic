@@ -59,40 +59,13 @@ def algo_config_to_class(algo_config):
     return algo_class, algo_kwargs
 
 
-class GoalConditioned():
-    """ Goal Conditioned mixin """
-    
-    def __init__(self, ):
-        pass
-
-
-class GCBC_Transformer(BC_Transformer, GoalConditioned):
+class GCBC_Transformer(BC_Transformer):
     """GCBC training with a Transformer policy."""
 
-    def _create_networks(self):
-        """Creates networks and places them into @self.nets."""
-        BC_Transformer._create_networks(self)
+    def init(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    def _set_params_from_config(self):
-        """
-        Read specific config variables we need for training / eval.
-        Called by @_create_networks method
-        """
-        BC_Transformer._set_params_from_config(self)
-
-    def process_batch_for_training(self, batch):
-        """
-        Processes input batch from a data loader to filter out
-        relevant information and prepare the batch for training.
-        Args:
-            batch (dict): dictionary with torch.Tensors sampled
-                from a data loader
-        Returns:
-            input_batch (dict): processed and filtered batch that
-                will be used for training
-        """
-        # always supervise all steps
-        return BC_Transformer.process_batch_for_training(self, batch)
+        self.cached_goals = {}
 
     def _forward_training(self, batch, epoch=None):
         """
@@ -106,43 +79,24 @@ class GCBC_Transformer(BC_Transformer, GoalConditioned):
         Returns:
             predictions (dict): dictionary containing network outputs
         """
+
         # ensure that transformer context length is consistent with temporal dimension of observations
+        # no need to do this for goal_dict since self.nets does this 
         TensorUtils.assert_size_at_dim(
-            batch["obs"],
+            batch['obs'],
             size=(self.context_length),
             dim=1,
             msg=f"Error: expect temporal dimension of obs batch to match transformer context length {self.context_length}",
         )
         return super()._forward_training(batch, epoch=None)
 
-    def _compute_losses(self, predictions, batch):
+    def get_cached_goals(self, env_name):
+        """ 
+        returns the surrogate goal_dict 
+        since envs don't seem to return goals
         """
-        Internal helper function for BC algo class. Compute losses based on
-        network outputs in @predictions dict, using reference labels in @batch.
+        return self.cached_goals[env_name]
 
-        Args:
-            predictions (dict): dictionary containing network outputs, from @_forward_training
-            batch (dict): dictionary with torch.Tensors sampled
-                from a data loader and filtered by @process_batch_for_training
-
-        Returns:
-            losses (dict): dictionary of losses computed over the batch
-        """
-        super()._compute_losses(predictions, batch)
-
-    def get_action(self, obs_dict, goal_dict):
-        """
-        Get policy action outputs.
-        Args:
-            obs_dict (dict): current observation
-            goal_dict (dict): (optional) goal
-        Returns:
-            action (torch.Tensor): action tensor
-        """
-        return BC_Transformer.get_action(self, obs_dict, goal_dict)
-
-    def reset(self):
-        """prepare transformer for autoregressive inference in rollout"""
-        BC_Transformer.reset(self)
-
-
+    def cache_goal_dict(self, cache_dict):
+        """ stores the goal_dict for use with the rollout """
+        self.cached_goals = cache_dict
