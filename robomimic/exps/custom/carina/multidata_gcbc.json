@@ -21,7 +21,7 @@
         "epoch_every_n_steps": 100,
         "validation_epoch_every_n_steps": 10,
         "env": null,
-        "additional_envs": null,
+        "additional_envs": ["NutAssemblySquare", "PickPlaceCan"],
         "render": false,
         "render_video": true,
         "keep_all_videos": false,
@@ -37,10 +37,11 @@
     },
     "train": {
         "data": [
-            "/Users/matthewhyatt/cs/.datasets/robomimic/lift/ph/image_v141.hdf5",
-            "/Users/matthewhyatt/cs/.datasets/robomimic/square/ph/image_v141.hdf5"
+            "/data/datasets/robomimic/lift/ph/image_v141.hdf5",
+            "/data/datasets/robomimic/can/ph/image_v141.hdf5",
+            "/data/datasets/robomimic/square/ph/image_v141.hdf5"
         ],
-        "output_dir": "/Users/matthewhyatt/cs/.results/robomimic/bc_transformer_trained_models",
+        "output_dir": "/data/results/robomimic/gcbc",
         "num_data_workers": 0,
         "hdf5_cache_mode": "low_dim",
         "hdf5_use_swmr": true,
