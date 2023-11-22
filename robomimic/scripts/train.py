@@ -215,8 +215,10 @@ def train(config, device):
         and type(train_loader.dataset) is TrainUtils.EnhancedConcatDataset
     ):
         getmeta = lambda d: FileUtils.get_env_metadata_from_dataset(dataset_path=d)
-        path2meta = {p:getmeta(p)['env_name'] for p in config.train.data}
-        sample = {path2meta[k]:v for k,v in train_loader.dataset.sample_goal().items()}
+        path2meta = {p: getmeta(p)["env_name"] for p in config.train.data}
+        sample = {
+            path2meta[k]: v for k, v in train_loader.dataset.sample_goal().items()
+        }
         model.cache_goal_dict(sample)
 
     for epoch in range(1, config.train.num_epochs + 1):  # epoch numbers start at 1
@@ -413,7 +415,11 @@ def main(args):
         config.experiment.name = args.name
 
     # get torch device
-    device = TorchUtils.get_torch_device(try_to_use_cuda=config.train.cuda)
+    device = (
+        TorchUtils.get_torch_device(try_to_use_cuda=config.train.cuda)
+        if not args.device
+        else torch.device(args.device)
+    )
 
     # maybe modify config for debugging purposes
     if args.debug:
