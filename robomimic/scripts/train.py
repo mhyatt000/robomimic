@@ -457,6 +457,14 @@ if __name__ == "__main__":
             If omitted, default settings are used. This is the preferred way to run experiments.",
     )
 
+    # device
+    parser.add_argument(
+        "--device",
+        type=str,
+        default=None,
+        help="the device (CPU/GPU) to use",
+    )
+
     # Algorithm Name
     parser.add_argument(
         "--algo",
