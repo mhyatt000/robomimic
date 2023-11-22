@@ -98,9 +98,6 @@ class EnhancedConcatDataset(ConcatDataset):
         """
         prep = lambda x : {k:prep(v) for k,v in x.items()} if type(x) is dict else ObsUtils.batch_image_hwc_to_chw(x) if len(x.shape) == 3 else x
         out = prep(data_dict)
-        allshape = lambda x : {k:allshape(v) for k,v in x.items()} if type(x) is dict else x.shape
-        # print(allshape(out))
-        # quit()
         return out
 
     def sample_goal(self):
